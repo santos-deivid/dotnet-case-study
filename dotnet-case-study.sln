@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Edge", "Edge", "{A9815C8E-FF63-445D-A8ED-C2D179A6455D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application", "Application", "{7F84E2DD-8C45-47E1-BFBE-ECB5BE806DD5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{AF42CAD8-3D4F-433E-B977-61575DB1F157}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway.Yarp", "Edge\Gateway.Yarp\Gateway.Yarp.csproj", "{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6} = {A9815C8E-FF63-445D-A8ED-C2D179A6455D}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,53 @@
+﻿services:
+
+  consul:
+    image: hashicorp/consul:1.19
+    container_name: consul
+    restart: unless-stopped
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: "agent -dev -ui -client=0.0.0.0"
+    networks:
+      - dotnet-case-study-net
+
+  postgres-keycloak:
+    image: postgres:16
+    container_name: postgres-keycloak
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_pass
+    volumes:
+      - postgres-keycloak-data:/var/lib/postgresql/data
+    networks:
+      - dotnet-case-study-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: keycloak
+    restart: unless-stopped
+    depends_on:
+      - postgres-keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_pass
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+    ports:
+      - "8080:8080"
+    command: start-dev
+    networks:
+      - dotnet-case-study-net
+
+networks:
+  dotnet-case-study-net:
+    driver: bridge
+
+volumes:
+  postgres-keycloak-data:

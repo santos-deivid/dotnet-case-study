@@ -1,0 +1,12 @@
+### Teste 1 — Sem token (deve retornar 401)
+GET http://localhost:5000/api/test
+
+### Teste 2 — Obter token do Keycloak
+POST http://localhost:8080/realms/dotnet-case-study/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=gateway-client&client_secret=YIyOjUaPkW22Qe81Ng73vsI34k224YN9&username=testuser&password=123456
+
+### Teste 3 — Com token (substituir <ACCESS_TOKEN> pelo token retornado acima)
+GET http://localhost:5000/api/test
+Authorization: Bearer <ACCESS_TOKEN>
