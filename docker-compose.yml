@@ -62,6 +62,24 @@
       - consul
     networks:
       - dotnet-case-study-net
+    
+  audit-service:
+    build:
+      context: .
+      dockerfile: Application/AuditService/Dockerfile
+    container_name: audit-service
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    environment:
+      ASPNETCORE_URLS: http://+:5002
+      Consul__Host: http://consul:8500
+      Consul__ServiceAddress: localhost
+      Consul__ServicePort: 5002
+    depends_on:
+      - consul
+    networks:
+      - dotnet-case-study-net
 
 networks:
   dotnet-case-study-net:
