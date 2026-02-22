@@ -18,7 +18,7 @@ public sealed class ConsulRegistrationService(
         var healthInterval = configuration.GetValue<int>("Consul:HealthCheckIntervalSeconds", 10);
         var healthTimeout = configuration.GetValue<int>("Consul:HealthCheckTimeoutSeconds", 5);
 
-        _serviceId = $"{serviceName}-{Guid.NewGuid()}";
+        _serviceId = $"{serviceName}-{servicePort}";
 
         var registration = new AgentServiceRegistration
         {
