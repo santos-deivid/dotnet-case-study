@@ -44,6 +44,24 @@
     command: start-dev
     networks:
       - dotnet-case-study-net
+        
+  sentinel-service:
+    build:
+      context: .
+      dockerfile: Application/SentinelService/Dockerfile
+    container_name: sentinel-service
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      ASPNETCORE_URLS: http://+:5001
+      Consul__Host: http://consul:8500
+      Consul__ServiceAddress: localhost
+      Consul__ServicePort: 5001
+    depends_on:
+      - consul
+    networks:
+      - dotnet-case-study-net
 
 networks:
   dotnet-case-study-net:

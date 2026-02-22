@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway.Yarp", "Edge\Gateway.Yarp\Gateway.Yarp.csproj", "{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SentinelService", "Application\SentinelService\SentinelService.csproj", "{2D7BBBD7-8F14-4A61-8B87-D303AD565440}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,11 +17,16 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6} = {A9815C8E-FF63-445D-A8ED-C2D179A6455D}
+		{2D7BBBD7-8F14-4A61-8B87-D303AD565440} = {7F84E2DD-8C45-47E1-BFBE-ECB5BE806DD5}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FBF4913-C751-42A4-A6A6-FA70B48B9EB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D7BBBD7-8F14-4A61-8B87-D303AD565440}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D7BBBD7-8F14-4A61-8B87-D303AD565440}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D7BBBD7-8F14-4A61-8B87-D303AD565440}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D7BBBD7-8F14-4A61-8B87-D303AD565440}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
