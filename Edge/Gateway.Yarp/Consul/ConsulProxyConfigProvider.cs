@@ -71,6 +71,13 @@ public class ConsulProxyConfigProvider : IProxyConfigProvider, IDisposable
                     Match = new RouteMatch
                     {
                         Path = $"/api/{serviceName}/{{**catch-all}}"
+                    },
+                    Transforms = new List<IReadOnlyDictionary<string, string>>
+                    {
+                        new Dictionary<string, string>
+                        {
+                            ["PathPattern"] = "/{**catch-all}"
+                        }
                     }
                 });
 
