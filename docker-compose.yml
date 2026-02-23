@@ -53,15 +53,18 @@
     restart: unless-stopped
     ports:
       - "5001:5001"
+      - "5011:5011"
     environment:
-      ASPNETCORE_URLS: http://+:5001
+      ASPNETCORE_URLS: http://+:5001;https://+:5011
       Consul__Host: http://consul:8500
       Consul__ServiceAddress: localhost
-      Consul__ServicePort: 5001
+      Consul__ServicePort: 5011
     depends_on:
       - consul
     networks:
       - dotnet-case-study-net
+    volumes:
+      - ./Infrastructure/certs:/certs:ro
     
   audit-service:
     build:
@@ -71,15 +74,18 @@
     restart: unless-stopped
     ports:
       - "5002:5002"
+      - "5012:5012"
     environment:
-      ASPNETCORE_URLS: http://+:5002
+      ASPNETCORE_URLS: http://+:5002;https://+:5012
       Consul__Host: http://consul:8500
       Consul__ServiceAddress: localhost
-      Consul__ServicePort: 5002
+      Consul__ServicePort: 5012
     depends_on:
       - consul
     networks:
       - dotnet-case-study-net
+    volumes:
+      - ./Infrastructure/certs:/certs:ro
 
 networks:
   dotnet-case-study-net:

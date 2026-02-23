@@ -1,5 +1,6 @@
 ﻿using Consul;
 using Yarp.ReverseProxy.Configuration;
+using Yarp.ReverseProxy.Forwarder;
 using DestinationConfig = Yarp.ReverseProxy.Configuration.DestinationConfig;
 using RouteConfig = Yarp.ReverseProxy.Configuration.RouteConfig;
 
@@ -53,14 +54,23 @@ public class ConsulProxyConfigProvider : IProxyConfigProvider, IDisposable
                         $"{serviceName}-{index}",
                         new DestinationConfig()
                         {
-                            Address = $"http://{instance.ServiceAddress}:{instance.ServicePort}"
+                            Address = $"https://{instance.ServiceAddress}:{instance.ServicePort}"
                         }))
                     .ToDictionary();
                 
                 clusters.Add(new ClusterConfig
                 {
                     ClusterId = serviceName,
-                    Destinations = destinations
+                    Destinations = destinations,
+                    HttpClient = new HttpClientConfig
+                    {
+                        RequestHeaderEncoding = "utf-8"
+                    },
+                    HttpRequest = new ForwarderRequestConfig
+                    {
+                        Version = new Version(1, 1),
+                        VersionPolicy = HttpVersionPolicy.RequestVersionExact
+                    }
                 });
 
                 routes.Add(new RouteConfig
