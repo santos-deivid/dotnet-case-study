@@ -29,7 +29,7 @@ public sealed class ConsulRegistrationService(
             Tags = ["dotnet", "api"],
             Check = new AgentServiceCheck
             {
-                HTTP = $"http://host.docker.internal:{servicePort - 10}/health",
+                HTTP = $"http://{serviceAddress}:{servicePort - 10}/health",
                 Interval = TimeSpan.FromSeconds(healthInterval),
                 Timeout = TimeSpan.FromSeconds(healthTimeout),
                 DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(30)

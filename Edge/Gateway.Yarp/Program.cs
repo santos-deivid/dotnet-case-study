@@ -18,7 +18,7 @@ builder.Services
 
         options.TokenValidationParameters = new()
         {
-            ValidateIssuer = true,
+            ValidateIssuer = false,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true
