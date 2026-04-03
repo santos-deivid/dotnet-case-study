@@ -1,6 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using AuditService.Registration;
 using Consul;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +31,27 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
+// Authentication — Keycloak JWT Bearer
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = builder.Configuration["Keycloak:Authority"];
+        options.Audience = builder.Configuration["Keycloak:ClientId"];
+        options.RequireHttpsMetadata =
+            builder.Configuration.GetValue<bool>("Keycloak:RequireHttpsMetadata");
+
+        options.TokenValidationParameters = new()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 // Consul Client
 builder.Services.AddSingleton<IConsulClient>(_ =>
     new ConsulClient(config =>
@@ -47,6 +69,8 @@ builder.Services.AddHealthChecks();
 // Build
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapControllers();
 

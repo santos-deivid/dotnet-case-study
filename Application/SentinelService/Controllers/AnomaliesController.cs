@@ -1,10 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using SentinelService.Services;
 
 namespace SentinelService.Controllers;
 
 [ApiController]
 [Route("anomalies")]
-public sealed class AnomaliesController : ControllerBase
+public sealed class AnomaliesController(
+    KeycloakTokenService tokenService,
+    IHttpClientFactory httpClientFactory,
+    ConsulDiscoveryService discoveryService)
+    : ControllerBase
 {
     private static readonly IReadOnlyList<object> Anomalies =
     [
@@ -23,5 +29,32 @@ public sealed class AnomaliesController : ControllerBase
             (int)a.GetType().GetProperty("Id")!.GetValue(a)! == id);
 
         return anomaly is null ? NotFound() : Ok(anomaly);
+    }
+    
+    [HttpGet("report")]
+    public async Task<IActionResult> GetReport()
+    {
+        // 1. Descobrir endereço do AuditService via Consul
+        var auditServiceUrl = await discoveryService.GetServiceUrlAsync("audit-service");
+
+        // 2. Obter token do Keycloak via Client Credentials
+        var token = await tokenService.GetAccessTokenAsync();
+
+        // 3. Chamar AuditService via mTLS com o token
+        var client = httpClientFactory.CreateClient("audit-service");
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.GetAsync($"{auditServiceUrl}/audit-logs");
+        response.EnsureSuccessStatusCode();
+
+        var auditLogs = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        return Ok(new
+        {
+            GeneratedAt = DateTime.UtcNow,
+            Anomalies,
+            AuditLogs = auditLogs
+        });
     }
 }

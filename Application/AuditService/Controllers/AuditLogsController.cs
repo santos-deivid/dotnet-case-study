@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AuditService.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("audit-logs")]
 public sealed class AuditLogsController : ControllerBase

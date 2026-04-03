@@ -2,6 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using Consul;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using SentinelService.Registration;
+using SentinelService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,32 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
+// HttpClient — Keycloak (sem mTLS)
+builder.Services.AddHttpClient("keycloak");
+
+// HttpClient — AuditService (com mTLS)
+builder.Services.AddHttpClient("audit-service")
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        var sentinelCert = new X509Certificate2("/certs/sentinel.pfx", "sentinel123");
+        var caPem = File.ReadAllText("/certs/ca.crt");
+        var caCert = X509Certificate2.CreateFromPem(caPem);
+
+        var handler = new HttpClientHandler();
+        handler.ClientCertificates.Add(sentinelCert);
+        handler.ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
+        {
+            chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+            chain.ChainPolicy.CustomTrustStore.Add(caCert);
+            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+            return chain.Build(new X509Certificate2(cert!));
+        };
+        return handler;
+    });
+
+// Services
+builder.Services.AddScoped<KeycloakTokenService>();
+
 // Consul Client
 builder.Services.AddSingleton<IConsulClient>(_ =>
     new ConsulClient(config =>
@@ -54,6 +81,8 @@ builder.Services.AddSingleton<IConsulClient>(_ =>
 
 // Consul Registration
 builder.Services.AddHostedService<ConsulRegistrationService>();
+
+builder.Services.AddScoped<ConsulDiscoveryService>();
 
 // Controllers + Health Check
 builder.Services.AddControllers();
