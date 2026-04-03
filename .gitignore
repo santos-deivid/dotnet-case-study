@@ -491,3 +491,16 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,jetbrains+all
+
+### Segurança e Configurações Locais ###
+
+# Ignorar certificados e chaves mTLS locais
+*.crt
+*.key
+*.pem
+Infrastructure/certs/
+
+# Ignorar arquivos de configuração que contêm secrets
+appsettings.json
+appsettings.*.json
+secrets.json
