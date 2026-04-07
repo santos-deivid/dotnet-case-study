@@ -1,6 +1,22 @@
 ﻿{
   "datacenter": "dc1",
   "log_level": "INFO",
-  "enable_script_checks": false,
-  "enable_local_script_checks": true
+  "server": true,
+  "bootstrap": true,
+  "ui_config": {
+    "enabled": true
+  },
+  "ports": {
+    "https": 8501,
+    "http": -1
+  },
+  "tls": {
+    "defaults": {
+      "ca_file": "/certs/ca.crt",
+      "cert_file": "/certs/consul.crt",
+      "key_file": "/certs/consul.key",
+      "verify_incoming": true,
+      "verify_outgoing": true
+    }
+  }
 }

@@ -29,15 +29,32 @@ builder.Services.AddAuthorization();
 
 // Consul Client
 builder.Services.AddSingleton<IConsulClient>(_ =>
-    new ConsulClient(config =>
-    {
-        config.Address = new Uri(builder.Configuration["Consul:Host"]!);
-    }));
+{
+    var certPath = builder.Configuration["Mtls:GatewayCertPath"]!;
+    var certPass = builder.Configuration["Mtls:GatewayCertPassword"]!;
+    var caPem = File.ReadAllText(builder.Configuration["Mtls:CaCertPath"]!);
+
+    var gatewayCert = new X509Certificate2(certPath, certPass);
+    var caCert = X509Certificate2.CreateFromPem(caPem);
+
+    return new ConsulClient(config => { config.Address = new Uri(builder.Configuration["Consul:Host"]!); },
+        null,
+        handlerOverride: handler =>
+        {
+            handler.ClientCertificates.Add(gatewayCert);
+            handler.ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
+            {
+                chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                chain.ChainPolicy.CustomTrustStore.Add(caCert);
+                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                return chain.Build(new X509Certificate2(cert!));
+            };
+        });
+});
 
 // YARP + Consul Config Provider
 builder.Services.AddSingleton<ConsulProxyConfigProvider>();
-builder.Services.AddSingleton<IProxyConfigProvider>(
-    sp => sp.GetRequiredService<ConsulProxyConfigProvider>());
+builder.Services.AddSingleton<IProxyConfigProvider>(sp => sp.GetRequiredService<ConsulProxyConfigProvider>());
 
 // mTLS — Certificado do Gateway
 builder.Services
@@ -46,7 +63,7 @@ builder.Services
     {
         var certPath = builder.Configuration["Mtls:GatewayCertPath"]!;
         var certPass = builder.Configuration["Mtls:GatewayCertPassword"]!;
-        var caPath   = builder.Configuration["Mtls:CaCertPath"]!;
+        var caPath = builder.Configuration["Mtls:CaCertPath"]!;
 
         var gatewayCert = new X509Certificate2(certPath, certPass);
 

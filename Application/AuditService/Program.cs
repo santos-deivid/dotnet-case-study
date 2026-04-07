@@ -54,10 +54,29 @@ builder.Services.AddAuthorization();
 
 // Consul Client
 builder.Services.AddSingleton<IConsulClient>(_ =>
-    new ConsulClient(config =>
-    {
-        config.Address = new Uri(builder.Configuration["Consul:Host"]!);
-    }));
+{
+    var caCert = new X509Certificate2("/certs/ca.crt");
+
+    return new ConsulClient(config => { config.Address = new Uri(builder.Configuration["Consul:Host"]!); },
+        null,
+        handlerOverride: handler =>
+        {
+            // Certificado do serviço para autenticar no Consul
+            var servicePfxPath = builder.Configuration["Mtls:ServiceCertPath"]!;
+            var servicePfxPass = builder.Configuration["Mtls:ServiceCertPassword"]!;
+            var serviceCert = new X509Certificate2(servicePfxPath, servicePfxPass);
+
+            handler.ClientCertificates.Add(serviceCert);
+            handler.ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
+            {
+                chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                chain.ChainPolicy.CustomTrustStore.Add(caCert);
+                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                return chain.Build(new X509Certificate2(cert!));
+            };
+        }
+    );
+});
 
 // Consul Registration
 builder.Services.AddHostedService<ConsulRegistrationService>();
