@@ -1,5 +1,6 @@
 using System.Security.Cryptography.X509Certificates;
 using Consul;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using SentinelService.Registration;
 using SentinelService.Services;
@@ -9,7 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Kestrel — mTLS
 builder.WebHost.ConfigureKestrel(options =>
 {
-    var serverCert = new X509Certificate2("/certs/sentinel.pfx", "sentinel123");
+    var certPass = builder.Configuration["Mtls:ServiceCertPassword"]!;
+    var serverCert = new X509Certificate2("/certs/sentinel.pfx", certPass);
     var caCert = new X509Certificate2("/certs/ca.crt");
 
     options.ListenAnyIP(5001);
@@ -21,30 +23,37 @@ builder.WebHost.ConfigureKestrel(options =>
             https.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
             https.ClientCertificateValidation = (cert, chain, errors) =>
             {
-                Console.WriteLine($"[mTLS Server] Received cert: {cert?.Subject ?? "NULL"}");
-                Console.WriteLine($"[mTLS Server] Errors: {errors}");
-
-                if (cert is null || chain is null)
-                {
-                    Console.WriteLine("[mTLS Server] Cert or chain is null — REJECTED");
-                    return false;
-                }
-
+                if (chain is null) return false;
                 chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 chain.ChainPolicy.CustomTrustStore.Add(caCert);
-                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-
+                
                 var result = chain.Build(cert);
-                Console.WriteLine($"[mTLS Server] Chain build result: {result}");
-
-                foreach (var status in chain.ChainStatus)
-                    Console.WriteLine($"[mTLS Server] Chain status: {status.StatusInformation}");
-
+                
                 return result;
             };
         });
     });
 });
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = builder.Configuration["Keycloak:Authority"];
+        options.Audience = builder.Configuration["Keycloak:ClientId"];
+        options.RequireHttpsMetadata =
+            builder.Configuration.GetValue<bool>("Keycloak:RequireHttpsMetadata");
+
+        options.TokenValidationParameters = new()
+        {
+            ValidateIssuer = false,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // HttpClient — Keycloak (sem mTLS)
 builder.Services.AddHttpClient("keycloak");
@@ -53,7 +62,8 @@ builder.Services.AddHttpClient("keycloak");
 builder.Services.AddHttpClient("audit-service")
     .ConfigurePrimaryHttpMessageHandler(() =>
     {
-        var sentinelCert = new X509Certificate2("/certs/sentinel.pfx", "sentinel123");
+        var certPass = builder.Configuration["Mtls:ServiceCertPassword"]!;
+        var sentinelCert = new X509Certificate2("/certs/sentinel.pfx", certPass);
         var caPem = File.ReadAllText("/certs/ca.crt");
         var caCert = X509Certificate2.CreateFromPem(caPem);
 
@@ -63,7 +73,6 @@ builder.Services.AddHttpClient("audit-service")
         {
             chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
             chain.ChainPolicy.CustomTrustStore.Add(caCert);
-            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
             return chain.Build(new X509Certificate2(cert!));
         };
         return handler;
@@ -91,7 +100,6 @@ builder.Services.AddSingleton<IConsulClient>(_ =>
             {
                 chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 chain.ChainPolicy.CustomTrustStore.Add(caCert);
-                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
                 return chain.Build(new X509Certificate2(cert!));
             };
         }
@@ -110,6 +118,8 @@ builder.Services.AddHealthChecks();
 // Build
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapControllers();
 

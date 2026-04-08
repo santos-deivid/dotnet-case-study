@@ -19,8 +19,8 @@ public sealed class KeycloakTokenService
 
         var parameters = new Dictionary<string, string>
         {
-            ["grant_type"]    = "client_credentials",
-            ["client_id"]     = _configuration["Keycloak:ClientId"]!,
+            ["grant_type"] = "client_credentials",
+            ["client_id"] = _configuration["Keycloak:MicroserviceClientId"]!,
             ["client_secret"] = _configuration["Keycloak:ClientSecret"]!
         };
 

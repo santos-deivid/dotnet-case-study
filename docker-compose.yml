@@ -81,7 +81,7 @@
       Consul__Host: https://consul:8501
       Consul__ServiceAddress: sentinel-service
       Consul__ServicePort: 5011
-      Keycloak__ClientSecret: C45c0ZEm1FJ2XbaFaQtAVwWUqrt48E7V
+      Keycloak__ClientSecret: cGe2CVCkRUQeb3jxalvBuci4Ub4Utiym
       Mtls__ServiceCertPassword: sentinel123
     depends_on:
       - consul

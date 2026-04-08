@@ -46,7 +46,6 @@ builder.Services.AddSingleton<IConsulClient>(_ =>
             {
                 chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 chain.ChainPolicy.CustomTrustStore.Add(caCert);
-                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
                 return chain.Build(new X509Certificate2(cert!));
             };
         });
@@ -78,14 +77,9 @@ builder.Services
 
             chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
             chain.ChainPolicy.CustomTrustStore.Add(caCert);
-            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
 
             var result = chain.Build(new X509Certificate2(cert));
-
-            if (!result)
-                foreach (var status in chain.ChainStatus)
-                    Console.WriteLine($"[mTLS] Chain error: {status.StatusInformation}");
-
+            
             return result;
         };
     });

@@ -1,9 +1,11 @@
 ﻿using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SentinelService.Services;
 
 namespace SentinelService.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("anomalies")]
 public sealed class AnomaliesController(

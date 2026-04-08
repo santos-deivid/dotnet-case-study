@@ -9,7 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Kestrel — mTLS
 builder.WebHost.ConfigureKestrel(options =>
 {
-    var serverCert = new X509Certificate2("/certs/audit.pfx", "audit123");
+    var certPass = builder.Configuration["Mtls:ServiceCertPassword"]!;
+    var serverCert = new X509Certificate2("/certs/audit.pfx", certPass);
     var caCert = new X509Certificate2("/certs/ca.crt");
 
     // HTTP — apenas para health check do Consul
@@ -71,7 +72,6 @@ builder.Services.AddSingleton<IConsulClient>(_ =>
             {
                 chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 chain.ChainPolicy.CustomTrustStore.Add(caCert);
-                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
                 return chain.Build(new X509Certificate2(cert!));
             };
         }
