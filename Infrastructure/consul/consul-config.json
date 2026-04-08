@@ -1,5 +1,6 @@
-﻿{
+{
   "datacenter": "dc1",
+  "data_dir": "/consul/data",
   "log_level": "INFO",
   "server": true,
   "bootstrap": true,
