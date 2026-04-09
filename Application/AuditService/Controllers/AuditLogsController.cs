@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AuditService.Controllers;
 
-[Authorize]
+[Authorize(Policy = "ServiceOnly")]
 [ApiController]
 [Route("audit-logs")]
 public sealed class AuditLogsController : ControllerBase

@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using AuditService.Registration;
 using Consul;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -49,9 +51,29 @@ builder.Services
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true
         };
+        
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                if (context.Principal?.Identity is not ClaimsIdentity identity) return Task.CompletedTask;
+
+                var realmAccess = context.Principal?.FindFirst("realm_access")?.Value;
+                if (realmAccess is null) return Task.CompletedTask;
+
+                var roles = JsonSerializer.Deserialize<JsonElement>(realmAccess);
+                if (!roles.TryGetProperty("roles", out var rolesArray)) return Task.CompletedTask;
+                foreach (var role in rolesArray.EnumerateArray())
+                    identity.AddClaim(new Claim(ClaimTypes.Role, role.GetString()!));
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("ServiceOnly", policy =>
+        policy.RequireRole("service"));
 
 // Consul Client
 builder.Services.AddSingleton<IConsulClient>(_ =>

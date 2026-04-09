@@ -48,7 +48,11 @@ public sealed class AnomaliesController(
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         var response = await client.GetAsync($"{auditServiceUrl}/audit-logs");
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            return StatusCode((int)response.StatusCode, 
+                $"AuditService retornou {response.StatusCode}");
+        }
 
         var auditLogs = await response.Content.ReadFromJsonAsync<JsonElement>();
 
