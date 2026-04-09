@@ -13,7 +13,7 @@ public sealed class ConsulDiscoveryService
 
     public async Task<string> GetServiceUrlAsync(string serviceName)
     {
-        var result = await _consulClient.Health.Service(serviceName);
+        var result = await _consulClient.Health.Service(serviceName, tag: "", passingOnly: true);
 
         var instance = result.Response.FirstOrDefault()
                        ?? throw new InvalidOperationException(

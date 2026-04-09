@@ -32,7 +32,7 @@ public sealed class ConsulRegistrationService(
                 HTTP = $"http://{serviceAddress}:{servicePort - 10}/health",
                 Interval = TimeSpan.FromSeconds(healthInterval),
                 Timeout = TimeSpan.FromSeconds(healthTimeout),
-                DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(30)
+                DeregisterCriticalServiceAfter = TimeSpan.FromMinutes(1)
             }
         };
 
