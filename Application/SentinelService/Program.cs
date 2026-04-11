@@ -26,9 +26,9 @@ builder.WebHost.ConfigureKestrel(options =>
                 if (chain is null) return false;
                 chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 chain.ChainPolicy.CustomTrustStore.Add(caCert);
-                
+
                 var result = chain.Build(cert);
-                
+
                 return result;
             };
         });
@@ -44,6 +44,19 @@ builder.Services
         options.RequireHttpsMetadata =
             builder.Configuration.GetValue<bool>("Keycloak:RequireHttpsMetadata");
 
+        // CA própria para validar o certificado do Keycloak
+        var caCert = new X509Certificate2("/certs/ca.crt");
+        options.BackchannelHttpHandler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
+            {
+                if (cert is null || chain is null) return false;
+                chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                chain.ChainPolicy.CustomTrustStore.Add(caCert);
+                return chain.Build(new X509Certificate2(cert));
+            }
+        };
+
         options.TokenValidationParameters = new()
         {
             ValidateIssuer = true,
@@ -55,8 +68,21 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-// HttpClient — Keycloak (sem mTLS)
-builder.Services.AddHttpClient("keycloak");
+// HttpClient — Keycloak
+builder.Services.AddHttpClient("keycloak")
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        var caCert = new X509Certificate2("/certs/ca.crt");
+        var handler = new HttpClientHandler();
+        handler.ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
+        {
+            if (cert is null || chain is null) return false;
+            chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+            chain.ChainPolicy.CustomTrustStore.Add(caCert);
+            return chain.Build(new X509Certificate2(cert));
+        };
+        return handler;
+    });
 
 // HttpClient — AuditService (com mTLS)
 builder.Services.AddHttpClient("audit-service")

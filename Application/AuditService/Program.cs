@@ -44,6 +44,19 @@ builder.Services
         options.RequireHttpsMetadata =
             builder.Configuration.GetValue<bool>("Keycloak:RequireHttpsMetadata");
 
+        // CA própria para validar o certificado do Keycloak
+        var caCert = new X509Certificate2("/certs/ca.crt");
+        options.BackchannelHttpHandler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
+            {
+                if (cert is null || chain is null) return false;
+                chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                chain.ChainPolicy.CustomTrustStore.Add(caCert);
+                return chain.Build(new X509Certificate2(cert));
+            }
+        };
+
         options.TokenValidationParameters = new()
         {
             ValidateIssuer = true,
@@ -51,7 +64,7 @@ builder.Services
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true
         };
-        
+
         options.Events = new JwtBearerEvents
         {
             OnTokenValidated = context =>
