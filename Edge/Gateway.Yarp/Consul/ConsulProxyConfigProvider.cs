@@ -44,8 +44,10 @@ public class ConsulProxyConfigProvider : IProxyConfigProvider, IDisposable
 
                 if (serviceName == "consul") continue;
                 
-                var instancesResponse = await _consulClient.Catalog.Service(serviceName);
-                var instances = instancesResponse.Response;
+                var instancesResponse = await _consulClient.Health.Service(serviceName, tag: "", passingOnly: true);
+                var instances = instancesResponse.Response
+                    .Select(e => e.Service)
+                    .ToArray();
                 
                 if (instances.Length == 0) continue;
 
@@ -54,7 +56,7 @@ public class ConsulProxyConfigProvider : IProxyConfigProvider, IDisposable
                         $"{serviceName}-{index}",
                         new DestinationConfig()
                         {
-                            Address = $"https://{instance.ServiceAddress}:{instance.ServicePort}"
+                            Address = $"https://{instance.Address}:{instance.Port}"
                         }))
                     .ToDictionary();
                 

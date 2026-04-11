@@ -23,7 +23,7 @@ builder.WebHost.ConfigureKestrel(options =>
             https.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
             https.ClientCertificateValidation = (cert, chain, errors) =>
             {
-                if (chain is null) return false;
+                if (cert is null || chain is null) return false;
                 chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 chain.ChainPolicy.CustomTrustStore.Add(caCert);
 
@@ -97,7 +97,8 @@ builder.Services.AddHttpClient("audit-service")
         handler.ClientCertificates.Add(sentinelCert);
         handler.ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
         {
-            chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+            if (cert is null || chain is null) return false;
+            chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
             chain.ChainPolicy.CustomTrustStore.Add(caCert);
             return chain.Build(new X509Certificate2(cert!));
         };
@@ -124,7 +125,8 @@ builder.Services.AddSingleton<IConsulClient>(_ =>
             handler.ClientCertificates.Add(serviceCert);
             handler.ServerCertificateCustomValidationCallback = (_, cert, chain, _) =>
             {
-                chain!.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                if (cert is null || chain is null) return false;
+                chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 chain.ChainPolicy.CustomTrustStore.Add(caCert);
                 return chain.Build(new X509Certificate2(cert!));
             };

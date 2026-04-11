@@ -28,7 +28,7 @@
       - dotnet-case-study-net
 
   keycloak:
-    image: quay.io/keycloak/keycloak:25.0
+    image: quay.io/keycloak/keycloak:25.0.6
     container_name: keycloak
     restart: unless-stopped
     depends_on:
@@ -47,11 +47,13 @@
       KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
       KC_HTTPS_CERTIFICATE_FILE: /certs/keycloak.crt
       KC_HTTPS_CERTIFICATE_KEY_FILE: /certs/keycloak.key
+      KC_IMPORT: /opt/keycloak/data/import/dotnet-case-study-realm.json
     ports:
       - "8080:8080"
       - "8443:8443"
     volumes:
       - ./Infrastructure/certs:/certs:ro
+      - ./Infrastructure/keycloak:/opt/keycloak/data/import:ro
     command: start
     networks:
       - dotnet-case-study-net

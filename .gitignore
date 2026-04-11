@@ -504,3 +504,4 @@ Infrastructure/certs/
 appsettings.json
 appsettings.*.json
 secrets.json
+Infrastructure/keycloak/
