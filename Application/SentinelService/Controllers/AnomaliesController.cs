@@ -22,9 +22,11 @@ public sealed class AnomaliesController(
     ];
 
     [HttpGet]
+    [Authorize(Policy = "UserOrAdmin")]
     public IActionResult GetAll() => Ok(Anomalies);
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "UserOrAdmin")]
     public IActionResult GetById(int id)
     {
         var anomaly = Anomalies.FirstOrDefault(a =>
@@ -34,6 +36,7 @@ public sealed class AnomaliesController(
     }
     
     [HttpGet("report")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetReport()
     {
         // 1. Descobrir endereço do AuditService via Consul

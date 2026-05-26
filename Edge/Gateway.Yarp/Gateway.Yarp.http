@@ -1,20 +1,105 @@
-### 1. Sem token — 401
-GET http://localhost:5000/api/sentinel-service/anomalies
+# =============================================================================
+# .NET Study Case — Cenários de desenvolvimento para Ajuste 2 (RBAC)
+# PRÉ-REQUISITO: Direct access grants habilitado no gateway-client (só dev).
+# Selecionar environment "dev" no Run with antes de executar.
+# Ordem obrigatória: rodar os 3 requests do Bloco 1 primeiro, um por um.
+# =============================================================================
 
-### 2. Obter token via HTTPS
-POST https://keycloak:8443/realms/dotnet-case-study/protocol/openid-connect/token
+# =============================================================================
+# BLOCO 1 — Obtenção de tokens (rodar primeiro, um por um)
+# =============================================================================
+
+### [TOKEN] Service account (gateway-client — sem role user/admin)
+POST {{realm}}
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=client_credentials&client_id=gateway-client&client_secret=Kgkx76P0aELWK6JCXsrbd8y9yfknOTsE
+grant_type=client_credentials&client_id={{clientId}}&client_secret={{clientSecret}}
 
-### 3. Anomalias com token
-GET http://localhost:5000/api/sentinel-service/anomalies
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJFVGZhMHNjdndxazVQWkowMGpXbFItSjRYelpUMmsyT015UFhPc1NMS2pRIn0.eyJleHAiOjE3NzU4NjY2MzUsImlhdCI6MTc3NTg2NjMzNSwianRpIjoiY2NlMzNjYjgtOTE4NC00NTkzLTlkOGUtNDU4NGIzMDA5YTg1IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hazo4NDQzL3JlYWxtcy9kb3RuZXQtY2FzZS1zdHVkeSIsImF1ZCI6WyJnYXRld2F5LWNsaWVudCIsImFjY291bnQiXSwic3ViIjoiNTQ2ZWM5NjMtNzc0YS00ODNlLTgwOWYtODJiNjRmZTczZGVkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZ2F0ZXdheS1jbGllbnQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWRvdG5ldC1jYXNlLXN0dWR5Iiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsImNsaWVudEhvc3QiOiIxNzIuMTguMC4xIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtZ2F0ZXdheS1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6ImdhdGV3YXktY2xpZW50In0.d_UdBu7-ysmZgZrs2RpLxzckIk9kNo4LVzql2XGupi8PF8ngMVu9y666PAALK-GvcPGdFYxhhmCohCMtwBjaOK1MzQ2tG17APFzdnK_T7h5Y2Hu064dRhNFBfBrUAOvst0MGZBXqpULaXMinjdnZOiyfgsOizF8tdmK-WaQDWx_CZdhW4kXwVjNWurD_Ap0xbz3BMP78xcMdinMWKgn8AqJ-8qMmRTUIe8tlV4kmbJio1UARX6UmwJo9C8UolGjf1MtpgIwBTsrsw9Y9GonSRDzoni-5dCPCq3lio-xo5LWukT6rkJVAhMgYr1Hg-derYYOHcFVLDyGUOmkTnrbtyg
+> {%
+    client.global.set("saToken", response.body.access_token);
+%}
 
-### 4. Audit logs com token de usuário — 401 audience inválido
-GET http://localhost:5000/api/audit-service/audit-logs
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJFVGZhMHNjdndxazVQWkowMGpXbFItSjRYelpUMmsyT015UFhPc1NMS2pRIn0.eyJleHAiOjE3NzU4NjY2MzUsImlhdCI6MTc3NTg2NjMzNSwianRpIjoiY2NlMzNjYjgtOTE4NC00NTkzLTlkOGUtNDU4NGIzMDA5YTg1IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hazo4NDQzL3JlYWxtcy9kb3RuZXQtY2FzZS1zdHVkeSIsImF1ZCI6WyJnYXRld2F5LWNsaWVudCIsImFjY291bnQiXSwic3ViIjoiNTQ2ZWM5NjMtNzc0YS00ODNlLTgwOWYtODJiNjRmZTczZGVkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZ2F0ZXdheS1jbGllbnQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWRvdG5ldC1jYXNlLXN0dWR5Iiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsImNsaWVudEhvc3QiOiIxNzIuMTguMC4xIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtZ2F0ZXdheS1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6ImdhdGV3YXktY2xpZW50In0.d_UdBu7-ysmZgZrs2RpLxzckIk9kNo4LVzql2XGupi8PF8ngMVu9y666PAALK-GvcPGdFYxhhmCohCMtwBjaOK1MzQ2tG17APFzdnK_T7h5Y2Hu064dRhNFBfBrUAOvst0MGZBXqpULaXMinjdnZOiyfgsOizF8tdmK-WaQDWx_CZdhW4kXwVjNWurD_Ap0xbz3BMP78xcMdinMWKgn8AqJ-8qMmRTUIe8tlV4kmbJio1UARX6UmwJo9C8UolGjf1MtpgIwBTsrsw9Y9GonSRDzoni-5dCPCq3lio-xo5LWukT6rkJVAhMgYr1Hg-derYYOHcFVLDyGUOmkTnrbtyg
+### [TOKEN] testuser (role: user)
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
 
-### 5. Relatório inter-serviço
-GET http://localhost:5000/api/sentinel-service/anomalies/report
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJFVGZhMHNjdndxazVQWkowMGpXbFItSjRYelpUMmsyT015UFhPc1NMS2pRIn0.eyJleHAiOjE3NzU4NjY2MzUsImlhdCI6MTc3NTg2NjMzNSwianRpIjoiY2NlMzNjYjgtOTE4NC00NTkzLTlkOGUtNDU4NGIzMDA5YTg1IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hazo4NDQzL3JlYWxtcy9kb3RuZXQtY2FzZS1zdHVkeSIsImF1ZCI6WyJnYXRld2F5LWNsaWVudCIsImFjY291bnQiXSwic3ViIjoiNTQ2ZWM5NjMtNzc0YS00ODNlLTgwOWYtODJiNjRmZTczZGVkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZ2F0ZXdheS1jbGllbnQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWRvdG5ldC1jYXNlLXN0dWR5Iiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsImNsaWVudEhvc3QiOiIxNzIuMTguMC4xIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtZ2F0ZXdheS1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6ImdhdGV3YXktY2xpZW50In0.d_UdBu7-ysmZgZrs2RpLxzckIk9kNo4LVzql2XGupi8PF8ngMVu9y666PAALK-GvcPGdFYxhhmCohCMtwBjaOK1MzQ2tG17APFzdnK_T7h5Y2Hu064dRhNFBfBrUAOvst0MGZBXqpULaXMinjdnZOiyfgsOizF8tdmK-WaQDWx_CZdhW4kXwVjNWurD_Ap0xbz3BMP78xcMdinMWKgn8AqJ-8qMmRTUIe8tlV4kmbJio1UARX6UmwJo9C8UolGjf1MtpgIwBTsrsw9Y9GonSRDzoni-5dCPCq3lio-xo5LWukT6rkJVAhMgYr1Hg-derYYOHcFVLDyGUOmkTnrbtyg
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password={{testUserPassword}}
+
+> {%
+    client.global.set("testuserToken", response.body.access_token);
+%}
+
+### [TOKEN] adminuser (role: admin)
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=adminuser&password={{adminUserPassword}}
+
+> {%
+    client.global.set("adminuserToken", response.body.access_token);
+%}
+
+# =============================================================================
+# BLOCO 2 — Autenticação básica (regressão)
+# =============================================================================
+
+### [1] Sem token → 401
+GET {{gateway}}/api/sentinel-service/anomalies
+
+### [2] Token inválido (assinatura corrompida) → 401
+GET {{gateway}}/api/sentinel-service/anomalies
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJmYWtlIn0.assinatura_invalida
+
+# =============================================================================
+# BLOCO 3 — RBAC: role USER (testuser)
+# =============================================================================
+
+### [3] testuser → GET /anomalies → 200
+GET {{gateway}}/api/sentinel-service/anomalies
+Authorization: Bearer {{testuserToken}}
+
+### [4] testuser → GET /anomalies/1 → 200
+GET {{gateway}}/api/sentinel-service/anomalies/1
+Authorization: Bearer {{testuserToken}}
+
+### [5] testuser → GET /anomalies/99 → 404 (passou RBAC, recurso não existe)
+GET {{gateway}}/api/sentinel-service/anomalies/99
+Authorization: Bearer {{testuserToken}}
+
+### [6] testuser → GET /anomalies/report → 403 (role user, BLOQUEADO)
+GET {{gateway}}/api/sentinel-service/anomalies/report
+Authorization: Bearer {{testuserToken}}
+
+# =============================================================================
+# BLOCO 4 — RBAC: role ADMIN (adminuser)
+# =============================================================================
+
+### [7] adminuser → GET /anomalies → 200
+GET {{gateway}}/api/sentinel-service/anomalies
+Authorization: Bearer {{adminuserToken}}
+
+### [8] adminuser → GET /anomalies/2 → 200
+GET {{gateway}}/api/sentinel-service/anomalies/2
+Authorization: Bearer {{adminuserToken}}
+
+### [9] adminuser → GET /anomalies/report → 200 (M2M completo)
+# gateway → sentinel (valida JWT admin) →
+#   KeycloakTokenService obtém token via client_credentials →
+#   descobre audit-service via Consul →
+#   chama audit-service via mTLS com token service →
+#   audit valida policy ServiceOnly → retorna logs →
+#   sentinel compõe anomalias + audit logs
+GET {{gateway}}/api/sentinel-service/anomalies/report
+Authorization: Bearer {{adminuserToken}}
+
+# =============================================================================
+# BLOCO 5 — Service account sem role de usuário
+# =============================================================================
+
+### [10] service account → GET /anomalies → 403 (sem role user/admin)
+GET {{gateway}}/api/sentinel-service/anomalies
+Authorization: Bearer {{saToken}}
+
+### [11] service account → GET /anomalies/report → 403 (sem role admin)
+GET {{gateway}}/api/sentinel-service/anomalies/report
+Authorization: Bearer {{saToken}}
