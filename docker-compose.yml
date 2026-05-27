@@ -84,10 +84,9 @@
     container_name: sentinel-service
     restart: unless-stopped
     ports:
-      - "5001:5001"
       - "5011:5011"
     environment:
-      ASPNETCORE_URLS: http://+:5001;https://+:5011
+      ASPNETCORE_URLS: https://+:5011
       Consul__Host: https://consul:8501
       Consul__ServiceAddress: sentinel-service
       Consul__ServicePort: 5011
@@ -107,10 +106,9 @@
     container_name: audit-service
     restart: unless-stopped
     ports:
-      - "5002:5002"
       - "5012:5012"
     environment:
-      ASPNETCORE_URLS: http://+:5002;https://+:5012
+      ASPNETCORE_URLS: https://+:5012
       Consul__Host: https://consul:8501
       Consul__ServiceAddress: audit-service
       Consul__ServicePort: 5012
