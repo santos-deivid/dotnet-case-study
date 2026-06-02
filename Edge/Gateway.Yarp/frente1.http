@@ -1,0 +1,132 @@
+﻿# =============================================================================
+# Frente 1 — Testes Funcionais e de Segurança — .NET Study Case
+# Referência: Plano de Testes, cenários 1 a 6
+# Cenários 7, 8 e 10: executados via curl e Wireshark (arquivos separados)
+# Cenário 9: requer Direct access grants ON temporariamente
+# =============================================================================
+
+# =============================================================================
+# BLOCO 0 — Tokens necessários (rodar antes dos cenários)
+# =============================================================================
+
+### [TOKEN] testuser (role: user)
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password={{testUserPassword}}
+
+> {%
+    client.global.set("testuserToken", response.body.access_token);
+%}
+
+### [TOKEN] adminuser (role: admin)
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=adminuser&password={{adminUserPassword}}
+
+> {%
+    client.global.set("adminuserToken", response.body.access_token);
+%}
+
+### [TOKEN] microservice-client (role: service) — para cenário 6
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=microservice-client&client_secret={{microserviceClientSecret}}
+
+> {%
+    client.global.set("serviceToken", response.body.access_token);
+%}
+
+
+# =============================================================================
+# CENÁRIO 1 — JWT expirado → 401
+# Token com exp em 08/05/2025 — definitivamente expirado
+# =============================================================================
+
+### C1 — JWT expirado → esperado: 401
+GET {{gateway}}/api/sentinel-service/anomalies
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJFVGZhMHNjdndxazVQWkowMGpXbFItSjRYelpUMmsyT015UFhPc1NMS2pRIn0.eyJleHAiOjE3NzU4NjY2MzUsImlhdCI6MTc3NTg2NjMzNSwianRpIjoiY2NlMzNjYjgtOTE4NC00NTkzLTlkOGUtNDU4NGIzMDA5YTg1IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hazo4NDQzL3JlYWxtcy9kb3RuZXQtY2FzZS1zdHVkeSIsImF1ZCI6WyJnYXRld2F5LWNsaWVudCIsImFjY291bnQiXSwic3ViIjoiNTQ2ZWM5NjMtNzc0YS00ODNlLTgwOWYtODJiNjRmZTczZGVkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZ2F0ZXdheS1jbGllbnQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWRvdG5ldC1jYXNlLXN0dWR5Iiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsImNsaWVudEhvc3QiOiIxNzIuMTguMC4xIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtZ2F0ZXdheS1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6ImdhdGV3YXktY2xpZW50In0.d_UdBu7-ysmZgZrs2RpLxzckIk9kNo4LVzql2XGupi8PF8ngMVu9y666PAALK-GvcPGdFYxhhmCohCMtwBjaOK1MzQ2tG17APFzdnK_T7h5Y2Hu064dRhNFBfBrUAOvst0MGZBXqpULaXMinjdnZOiyfgsOizF8tdmK-WaQDWx_CZdhW4kXwVjNWurD_Ap0xbz3BMP78xcMdinMWKgn8AqJ-8qMmRTUIe8tlV4kmbJio1UARX6UmwJo9C8UolGjf1MtpgIwBTsrsw9Y9GonSRDzoni-5dCPCq3lio-xo5LWukT6rkJVAhMgYr1Hg-derYYOHcFVLDyGUOmkTnrbtyg
+
+# =============================================================================
+# CENÁRIO 2 — JWT com assinatura inválida → 401
+# =============================================================================
+
+### C2 — Assinatura inválida → esperado: 401
+GET {{gateway}}/api/sentinel-service/anomalies
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJmYWtlIn0.assinatura_invalida
+
+# =============================================================================
+# CENÁRIO 3 — Requisição sem token → 401
+# =============================================================================
+
+### C3 — Sem token → esperado: 401
+GET {{gateway}}/api/sentinel-service/anomalies
+
+# =============================================================================
+# CENÁRIO 4 — Usuário com role user acessa /anomalies/report → 403
+# =============================================================================
+
+### C4 — testuser (role: user) → /anomalies/report → esperado: 403
+GET {{gateway}}/api/sentinel-service/anomalies/report
+Authorization: Bearer {{testuserToken}}
+
+# =============================================================================
+# CENÁRIO 5 — Token de usuário acessa /audit-logs diretamente → 401
+# Token gateway-client não tem aud:audit-service — rejeitado por audience
+# =============================================================================
+
+### C5 — testuserToken → /audit-logs → esperado: 401 (audience inválida)
+GET {{gateway}}/api/audit-service/audit-logs
+Authorization: Bearer {{testuserToken}}
+
+# =============================================================================
+# CENÁRIO 6 — Token M2M (role: service) acessa /audit-logs → 200
+# =============================================================================
+
+### C6 — serviceToken → /audit-logs → esperado: 200
+GET {{gateway}}/api/audit-service/audit-logs
+Authorization: Bearer {{serviceToken}}
+
+# =============================================================================
+# CENÁRIO 9 — Brute force → conta bloqueada após 5 tentativas
+# PRÉ-REQUISITO: Direct access grants ON temporariamente no gateway-client
+# Após o teste: desabilitar e re-exportar o realm
+# =============================================================================
+
+### C9.1 — Tentativa 1 (senha errada) → esperado: 401 Invalid credentials
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password=senha_errada
+
+### C9.2 — Tentativa 2 → esperado: 401
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password=senha_errada
+
+### C9.3 — Tentativa 3 → esperado: 401
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password=senha_errada
+
+### C9.4 — Tentativa 4 → esperado: 401
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password=senha_errada
+
+### C9.5 — Tentativa 5 → esperado: 401
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password=senha_errada
+
+### C9.6 — Tentativa 6 → esperado: 401 Account temporarily locked
+POST {{realm}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&client_secret={{clientSecret}}&username=testuser&password=senha_errada

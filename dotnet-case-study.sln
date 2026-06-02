@@ -12,6 +12,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SentinelService", "Applicat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditService", "Application\AuditService\AuditService.csproj", "{D6E0F58D-877F-4301-A60A-E091B915EC16}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0D5D68DA-90A4-4711-A466-9A1565522D4E}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\baseline.js = Tests\baseline.js
+		Tests\full-arch.js = Tests\full-arch.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

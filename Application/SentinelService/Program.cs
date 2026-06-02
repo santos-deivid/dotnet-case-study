@@ -4,6 +4,7 @@ using System.Text.Json;
 using Consul;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Prometheus;
 using SentinelService.Registration;
 using SentinelService.Services;
 
@@ -169,5 +170,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapControllers();
+app.MapMetrics();
 
 app.Run();
